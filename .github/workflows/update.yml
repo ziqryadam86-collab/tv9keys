@@ -1,0 +1,33 @@
+name: Auto Update Key
+on:
+  schedule:
+    - cron: '*/5 * * * *' # Jalan setiap 5 minit
+  workflow_dispatch:      # Boleh tekan 'Run' manual kalau nak test
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Perlu ni untuk save fail keys.txt balik ke repo
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+          
+      - name: Install dependencies
+        run: pip install requests
+        
+      - name: Run Extraction Script
+        run: python update_key.py
+        
+      - name: Commit & Push changes
+        run: |
+          git config --global user.name "GitHub Action Bot"
+          git config --global user.email "bot@github.com"
+          git add keys.txt
+          # Hanya commit kalau ada perubahan
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Update TV9 Key" && git push)
+          
