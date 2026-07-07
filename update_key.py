@@ -7,14 +7,18 @@ try:
     response = requests.get(url, headers={"User-Agent": "Mozilla/5.0"})
     html = response.text
 
-    # 1. Kita potong HTML tu, ambil bahagian TV9 sahaja
-    # Kita cari text yang ada 'alt="TV9"' sampai lah '</span>'
-    tv9_section = re.search(r'alt="TV9".*?</span>', html, re.DOTALL)
+    # 1. Kita cari blok pembungkus saluran (channel-item) yang mengandungi TV9
+    # Kita scan setiap ketul <li>...</li> sampai jumpa yang ada tulisan TV9
+    channels = re.findall(r'<li class="channel-item">.*?</li>', html, re.DOTALL)
+    
+    tv9_html = None
+    for channel in channels:
+        if 'alt="TV9"' in channel or 'class="channel-name">TV9</span>' in channel:
+            tv9_html = channel
+            break
 
-    if tv9_section:
-        tv9_html = tv9_section.group(0)
-        
-        # 2. Baru kita scan KID dan KEY dalam bahagian TV9 tadi sahaja
+    if tv9_html:
+        # 2. Sekarang kita scan KID dan KEY dalam blok TV9 yang tepat ini sahaja!
         kid_match = re.search(r'kid&quot;:&quot;([a-f0-9]{32})&quot;', tv9_html)
         key_match = re.search(r'key&quot;:&quot;([a-f0-9]{32})&quot;', tv9_html)
 
@@ -27,7 +31,7 @@ try:
                 f.write(f"{kid}:{key}")
             print(f"Berjaya dapatkan Kunci TV9: {kid}:{key}")
         else:
-            print("Kunci dalam section TV9 tidak dijumpai!")
+            print("Kunci dalam blok TV9 tidak dijumpai!")
     else:
         print("Gagal menjumpai siaran TV9 dalam HTML!")
 
