@@ -4,21 +4,24 @@ on:
   schedule:
     - cron: '*/5 * * * *'
   workflow_dispatch:
-  
+
+# Beri kebenaran untuk push fail ke repo
+permissions:
+  contents: write
 
 jobs:
   extract-key:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Extract Key & Save XML
         run: |
-          # 1. Ekstrak key dan potong teks '#KODIPROP:inputstream.adaptive.license_key='
+          # 1. Ambil nilai key sahaja daripada M3U
           RAW_KEY=$(curl -s "https://ptv2026.com/PerfecttvFree3.m3u" | grep -i -A 6 "Cartoon Network" | grep "license_key=" | sed 's/#KODIPROP:inputstream.adaptive.license_key=//g' | tr -d '\r')
 
-          # 2. Simpan terus dalam tag <key>
+          # 2. Simpan ke fail key-cn-my.xml
           cat <<EOF > key-cn-my.xml
 <?xml version="1.0" encoding="UTF-8"?>
 <key>$RAW_KEY</key>
@@ -31,4 +34,4 @@ EOF
           git add key-cn-my.xml
           git commit -m "Update CN Key" || exit 0
           git push
-
+          
